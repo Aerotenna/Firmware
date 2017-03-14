@@ -269,6 +269,8 @@ private:
 	bool _hold_offboard_xy = false;
 	bool _hold_offboard_z = false;
 
+	float _valid_vel_max_xy;
+
 	math::Vector<3> _thrust_int;
 
 	math::Vector<3> _pos;
@@ -448,6 +450,7 @@ MulticopterPositionControl::MulticopterPositionControl() :
 	_alt_hold_engaged(false),
 	_run_pos_control(true),
 	_run_alt_control(true),
+	_valid_vel_max_xy(0.0f),
 	_yaw(0.0f),
 	_yaw_takeoff(0.0f),
 	_in_landing(false),
@@ -990,10 +993,13 @@ MulticopterPositionControl::control_manual(float dt)
 		reset_pos_sp();
 	}
 
+	/* set valid vel max to cruise */
+	_valid_vel_max_xy = _params.vel_cruise(0);
+
 	/* scale requested velocity setpoint to cruisespeed and rotate around yaw */
-	math::Vector<3> vel_cruise(_params.vel_cruise(0),
-				   _params.vel_cruise(1),
+	math::Vector<3> vel_cruise(_valid_vel_max_xy, _valid_vel_max_xy,
 				   (req_vel_sp_z > 0.0f) ? _params.vel_max_down : _params.vel_max_up);
+
 	math::Vector<3> req_vel_sp_scaled(req_vel_sp_xy(0), req_vel_sp_xy(1), req_vel_sp_z);
 
 	/* scale velocity setpoint to cruise speed (m/s) and rotate around yaw to NED frame */
@@ -1492,10 +1498,10 @@ void MulticopterPositionControl::control_auto(float dt)
 
 
 			/* scaled space: 1 == position error resulting max allowed speed */
+			_valid_vel_max_xy = (_params.vel_cruise(0) < _pos_sp_triplet.current.cruising_speed) ? _params.vel_cruise(
+						    0) : _pos_sp_triplet.current.cruising_speed;
 			math::Vector<2> cruising_speed_xy(next_sp(0) - curr_sp(0), next_sp(1) - curr_sp(1));
-			cruising_speed_xy = (_params.vel_cruise(0) < _pos_sp_triplet.current.cruising_speed) ?  cruising_speed_xy.normalized() *
-					    _params.vel_cruise(0) :
-					    cruising_speed_xy.normalized() * _pos_sp_triplet.current.cruising_speed;
+			cruising_speed_xy = cruising_speed_xy.normalized() * _valid_vel_max_xy;
 			float cruising_speed_z = (next_sp(2) < curr_sp(2)) ? _params.vel_max_up : _params.vel_max_down;
 			math::Vector<3> cruising_speed(cruising_speed_xy(0), cruising_speed_xy(1), cruising_speed_z);
 			math::Vector<3> scale = _params.pos_p.edivide(cruising_speed);
@@ -1706,10 +1712,10 @@ MulticopterPositionControl::control_position(float dt)
 	float vel_norm_xy = sqrtf(_vel_sp(0) * _vel_sp(0) +
 				  _vel_sp(1) * _vel_sp(1));
 
-	if (vel_norm_xy > _params.vel_max(0)) {
+	if (vel_norm_xy > _valid_vel_max_xy) {
 		/* note assumes vel_max(0) == vel_max(1) */
-		_vel_sp(0) = _vel_sp(0) * _params.vel_max(0) / vel_norm_xy;
-		_vel_sp(1) = _vel_sp(1) * _params.vel_max(1) / vel_norm_xy;
+		_vel_sp(0) = _vel_sp(0) * _valid_vel_max_xy / vel_norm_xy;
+		_vel_sp(1) = _vel_sp(1) * _valid_vel_max_xy / vel_norm_xy;
 	}
 
 	/* make sure velocity setpoint is saturated in z*/
@@ -2308,6 +2314,9 @@ MulticopterPositionControl::task_main()
 
 		// set dt for control blocks
 		setDt(dt);
+
+		/* default max veclocity in xy */
+		_valid_vel_max_xy = _params.vel_max(0);
 
 		if (_control_mode.flag_armed && !was_armed) {
 			/* reset setpoints and integrals on arming */
