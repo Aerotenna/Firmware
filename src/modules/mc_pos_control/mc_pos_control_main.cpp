@@ -1492,16 +1492,12 @@ void MulticopterPositionControl::control_auto(float dt)
 
 
 			/* scaled space: 1 == position error resulting max allowed speed */
-			math::Vector<3> cruising_speed(_params.vel_cruise(0),
-						       _params.vel_cruise(1),
-						       _params.vel_max_up);
-
-			if (PX4_ISFINITE(_pos_sp_triplet.current.cruising_speed) &&
-			    _pos_sp_triplet.current.cruising_speed > 0.1f) {
-				cruising_speed(0) = _pos_sp_triplet.current.cruising_speed;
-				cruising_speed(1) = _pos_sp_triplet.current.cruising_speed;
-			}
-
+			math::Vector<2> cruising_speed_xy(next_sp(0) - curr_sp(0), next_sp(1) - curr_sp(1));
+			cruising_speed_xy = (_params.vel_cruise(0) < _pos_sp_triplet.current.cruising_speed) ?  cruising_speed_xy.normalized() *
+					    _params.vel_cruise(0) :
+					    cruising_speed_xy.normalized() * _pos_sp_triplet.current.cruising_speed;
+			float cruising_speed_z = (next_sp(2) < curr_sp(2)) ? _params.vel_max_up : _params.vel_max_down;
+			math::Vector<3> cruising_speed(cruising_speed_xy(0), cruising_speed_xy(1), cruising_speed_z);
 			math::Vector<3> scale = _params.pos_p.edivide(cruising_speed);
 
 			/* convert current setpoint to scaled space */
