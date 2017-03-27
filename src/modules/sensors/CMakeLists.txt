@@ -43,6 +43,7 @@ px4_add_module(
 		sensors.cpp
 		parameters.cpp
 		temperature_compensation.cpp
+		ocpoc_xadc_batt_monitor.cpp
 
 	DEPENDS
 		platforms__common

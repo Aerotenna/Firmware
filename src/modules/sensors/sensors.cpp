@@ -95,6 +95,10 @@
 #include "rc_update.h"
 #include "voted_sensors_update.h"
 
+#if defined(__PX4_POSIX_OCPOC)
+  #include "ocpoc_xadc_batt_monitor.h"
+#endif
+
 using namespace DriverFramework;
 using namespace sensors;
 
@@ -157,7 +161,11 @@ public:
 	void	print_status();
 
 private:
+#if defined(__PX4_POSIX_OCPOC)
+    OCPOC_XADC_BATT_MONITOR  _h_adc;
+#else
 	DevHandle 	_h_adc;				/**< ADC driver handle */
+#endif
 	hrt_abstime	_last_adc;			/**< last time we took input from the ADC */
 
 	volatile bool 	_task_should_exit;		/**< if true, sensor task should exit */
@@ -326,7 +334,7 @@ Sensors::parameters_update()
 	DevHandle h_baro;
 	DevMgr::getHandle(BARO0_DEVICE_PATH, h_baro);
 
-#if !defined(__PX4_QURT) && !defined(__PX4_POSIX_RPI) && !defined(__PX4_POSIX_BEBOP)
+#if !defined(__PX4_QURT) && !defined(__PX4_POSIX_RPI) && !defined(__PX4_POSIX_BEBOP) && !defined(__PX4_POSIX_OCPOC)
 
 	// TODO: this needs fixing for QURT and Raspberry Pi
 	if (!h_baro.isValid()) {
@@ -353,13 +361,17 @@ Sensors::parameters_update()
 int
 Sensors::adc_init()
 {
+#if defined(__PX4_POSIX_OCPOC)
+    _h_adc.init();
 
+#else
 	DevMgr::getHandle(ADC0_DEVICE_PATH, _h_adc);
 
 	if (!_h_adc.isValid()) {
 		PX4_ERR("no ADC found: %s (%d)", ADC0_DEVICE_PATH, _h_adc.getError());
 		return PX4_ERROR;
 	}
+#endif
 
 	return OK;
 }
@@ -485,6 +497,9 @@ Sensors::adc_poll(struct sensor_combined_s &raw)
 				if (ADC_BATTERY_VOLTAGE_CHANNEL == buf_adc[i].am_channel) {
 					/* Voltage in volts */
 					bat_voltage_v = (buf_adc[i].am_data * _parameters.battery_voltage_scaling) * _parameters.battery_v_div;
+#if defined(__PX4_POSIX_OCPOC)
+					bat_voltage_v += 0.5f;
+#endif
 
 					if (bat_voltage_v > 0.5f) {
 						updated_battery = true;
