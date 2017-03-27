@@ -1032,7 +1032,7 @@ int preflight_check(struct vehicle_status_s *status, orb_advert_t *mavlink_log_p
 			mavlink_log_critical(mavlink_log_pub, "ARMING DENIED: Flying with USB is not safe");
 		}
 	}
-
+#if !defined(__PX4_POSIX_OCPOC)
 	if (battery->warning == battery_status_s::BATTERY_WARNING_LOW) {
 		preflight_ok = false;
 
@@ -1040,7 +1040,7 @@ int preflight_check(struct vehicle_status_s *status, orb_advert_t *mavlink_log_p
 			mavlink_log_critical(mavlink_log_pub, "ARMING DENIED: LOW BATTERY");
 		}
 	}
-
+#endif
 	/* report once, then set the flag */
 	if (reportFailures && !preflight_ok) {
 		status_flags->condition_system_prearm_error_reported = true;
