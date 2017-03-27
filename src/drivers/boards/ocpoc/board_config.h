@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (C) 2012-2017 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2017 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,33 +32,18 @@
  ****************************************************************************/
 
 /**
- * @file drv_led.h
+ * @file board_config.h
  *
- * Led device API to control the external LED(s) via uORB interface
+ * OCPOC internal definitions
  */
 
 #pragma once
 
 
-#include <uORB/topics/led_control.h>
+#define BOARD_NAME "OCPOC"
+#define BOARD_BATTERY1_V_DIV   (1/4096.0f)
+#define BOARD_BATTERY1_A_PER_V (1.0f + 10000/560.0f)
+#define BOARD_HAS_NO_RESET
+#define BOARD_HAS_NO_BOOTLOADER
 
-#include <board_config.h>
-
-// allow the board to override the number (or maxiumum number) of LED's it has
-#ifndef BOARD_MAX_LEDS
-#define BOARD_MAX_LEDS 4
-#endif
-
-#if BOARD_MAX_LEDS > 8 // because led_mask is uint8_t
-#error "BOARD_MAX_LEDS too large. You need to change the led_mask type in the led_control uorb topic (and where it's used)"
-#endif
-
-
-// set the queue size to the number of LED's, so that each led can be controlled individually
-static const int LED_UORB_QUEUE_LENGTH = BOARD_MAX_LEDS;
-
-#if defined (__PX4_POSIX_OCPOC)
-#define RGBLED0_DEVICE_PATH "/dev/i2c-1"
-#else
-#define RGBLED0_DEVICE_PATH "/dev/rgbled0"
-#endif
+#define BOARD_MAX_LEDS 1 // Number external of LED's this board has
