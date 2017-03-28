@@ -922,15 +922,17 @@ MulticopterPositionControl::reset_alt_sp()
 void
 MulticopterPositionControl::limit_altitude()
 {
+
+	float alt_max = _home_pos.z - _vehicle_land_detected.alt_max;
+
 	/* in altitude control, limit setpoint */
-	if (_run_alt_control && _pos_sp(2) <= -_vehicle_land_detected.alt_max) {
-		_pos_sp(2) = -_vehicle_land_detected.alt_max;
+	if (_run_alt_control && _pos_sp(2) <= alt_max) {
+		_pos_sp(2) = alt_max;
 		return;
 	}
 
 	/* in velocity control mode and want to fly upwards */
 	if (!_run_alt_control && _vel_sp(2) <= 0.0f) {
-
 		/* time to travel to reach zero velocity */
 		float delta_t = -_vel(2) / _params.acc_down_max;
 
@@ -938,8 +940,8 @@ MulticopterPositionControl::limit_altitude()
 		float pos_z_next = _pos(2) + _vel(2) * delta_t + 0.5f *
 				   _params.acc_down_max * delta_t *delta_t;
 
-		if (pos_z_next <= -_vehicle_land_detected.alt_max) {
-			_pos_sp(2) = -_vehicle_land_detected.alt_max;
+		if (pos_z_next <= alt_max) {
+			_pos_sp(2) = alt_max;
 			_run_alt_control = true;
 			return;
 		}
