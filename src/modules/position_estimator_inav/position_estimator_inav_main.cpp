@@ -430,7 +430,10 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 
 					/* mean calculation over several measurements */
 					if (baro_init_cnt < baro_init_num) {
-						if (PX4_ISFINITE(sensor.baro_alt_meter)) {
+
+						bool baro_updated = (sensor.baro_timestamp_relative != sensor.RELATIVE_TIMESTAMP_INVALID);
+
+						if (PX4_ISFINITE(sensor.baro_alt_meter) && baro_updated) {
 							baro_offset += sensor.baro_alt_meter;
 							baro_init_cnt++;
 						}
