@@ -1,8 +1,7 @@
 #set toolchain
-set(CMAKE_TOOLCHAIN_FILE ${PX4_SOURCE_DIR}/cmake/toolchains/Toolchain-arm-xilinx-linux-gnueabi.cmake)
+set(CMAKE_TOOLCHAIN_FILE ${PX4_SOURCE_DIR}/cmake/toolchains/Toolchain-gcc-arm-linux-gnueabihf.cmake)
 
 set(CMAKE_PROGRAM_PATH
-	"${OCPOC_TOOLCHAIN_DIR}"
 	${CMAKE_PROGRAM_PATH}
 )
 
