@@ -54,8 +54,13 @@ int  OCPOC_XADC_BATT_MONITOR::read(struct adc_msg_s (*buf)[12], unsigned int len
 	xadc_fd = fopen("/sys/bus/iio/devices/iio:device0/in_voltage8_raw", "r");
 
 	if (xadc_fd != NULL) {
-		fscanf(xadc_fd, "%d", buff);
+		int ret_tmp = fscanf(xadc_fd, "%d", buff);
 		fclose(xadc_fd);
+
+		if (ret_tmp < 0) {
+			return -1;
+		}
+
 	}else{
 		return -1;
 	}
