@@ -744,7 +744,14 @@ void VotedSensorsUpdate::mag_poll(struct sensor_combined_s &raw)
 					if (mag_report.device_id == _mag_device_id[driver_index]) {
 						(void)sprintf(str, "CAL_MAG%u_ROT", driver_index);
 						param_get(param_find(str), &mag_rot);
-						get_rot_matrix((enum Rotation)mag_rot, &_mag_rotation[uorb_index]);
+
+						if (mag_rot < 0) {
+							// Set internal magnetometers to use the board rotation
+							_mag_rotation[uorb_index] = _board_rotation;
+						} else {
+							// Set external magnetometers to use the parameter value
+							get_rot_matrix((enum Rotation)mag_rot, &_mag_rotation[uorb_index]);
+						}
 					}
 				}
 			}
@@ -993,7 +1000,7 @@ void VotedSensorsUpdate::print_status()
 bool
 VotedSensorsUpdate::apply_gyro_calibration(DevHandle &h, const struct gyro_calibration_s *gcal, const int device_id)
 {
-#if !defined(__PX4_QURT) && !defined(__PX4_POSIX_RPI) && !defined(__PX4_POSIX_BEBOP)
+#if !defined(__PX4_QURT) && !defined(__PX4_POSIX_RPI) && !defined(__PX4_POSIX_BEBOP)// && !defined(__PX4_POSIX_OCPOC)
 
 	/* On most systems, we can just use the IOCTL call to set the calibration params. */
 	return !h.ioctl(GYROIOCSSCALE, (long unsigned int)gcal);
@@ -1007,7 +1014,7 @@ VotedSensorsUpdate::apply_gyro_calibration(DevHandle &h, const struct gyro_calib
 bool
 VotedSensorsUpdate::apply_accel_calibration(DevHandle &h, const struct accel_calibration_s *acal, const int device_id)
 {
-#if !defined(__PX4_QURT) && !defined(__PX4_POSIX_RPI) && !defined(__PX4_POSIX_BEBOP)
+#if !defined(__PX4_QURT) && !defined(__PX4_POSIX_RPI) && !defined(__PX4_POSIX_BEBOP)// && !defined(__PX4_POSIX_OCPOC)
 
 	/* On most systems, we can just use the IOCTL call to set the calibration params. */
 	return !h.ioctl(ACCELIOCSSCALE, (long unsigned int)acal);
@@ -1021,7 +1028,7 @@ VotedSensorsUpdate::apply_accel_calibration(DevHandle &h, const struct accel_cal
 bool
 VotedSensorsUpdate::apply_mag_calibration(DevHandle &h, const struct mag_calibration_s *mcal, const int device_id)
 {
-#if !defined(__PX4_QURT) && !defined(__PX4_POSIX_RPI) && !defined(__PX4_POSIX_BEBOP)
+#if !defined(__PX4_QURT) && !defined(__PX4_POSIX_RPI) && !defined(__PX4_POSIX_BEBOP)// && !defined(__PX4_POSIX_OCPOC)
 
 	/* On most systems, we can just use the IOCTL call to set the calibration params. */
 	return !h.ioctl(MAGIOCSSCALE, (long unsigned int)mcal);
