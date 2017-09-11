@@ -310,10 +310,10 @@ sbus_input(int sbus_fd, uint16_t *values, uint16_t *num_values, bool *sbus_fails
 	 * Fetch bytes, but no more than we would need to complete
 	 * a complete frame.
 	 */
-	uint8_t buf[SBUS_FRAME_SIZE * 2];
+	uint8_t buf[SBUS_FRAME_SIZE * 4];
 	bool sbus_decoded = false;
 
-	ret = read(sbus_fd, &buf[0], SBUS_FRAME_SIZE);
+	ret = read(sbus_fd, &buf[0], SBUS_FRAME_SIZE*4);
 
 	/* if the read failed for any reason, just give up here */
 	if (ret < 1) {
