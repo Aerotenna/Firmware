@@ -953,7 +953,7 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 		matrix::Dcm<float> R = matrix::Quatf(att.q);
 
 		/* check for timeout on FLOW topic */
-		if ((flow_valid || lidar_valid) && t > (flow_time + flow_topic_timeout)) {
+		if ((flow_valid && t > (flow_time + flow_topic_timeout)) && (flow_valid && !lidar_valid)) {
 			flow_valid = false;
 			warnx("FLOW timeout");
 			mavlink_log_info(&mavlink_log_pub, "[inav] FLOW timeout");
