@@ -59,8 +59,6 @@ namespace ocpoc_mmap_pwm_out
 #define RCOUT_ZYNQ_PWM_BASE	    0x43c00000
 #define MAX_ZYNQ_PWMS		   8	/* number of pwm channels */
 static const int TICK_PER_US   =  50;
-static const int NUM_PWM	   =   8;
-
 
 static px4_task_t _task_handle = -1;
 volatile bool _task_should_exit = false;
@@ -225,7 +223,7 @@ int pwm_initialize(const char *device)
 		return -1;
 	}
 
-	for (i = 0; i < NUM_PWM; ++i) {
+	for (i = 0; i < MAX_ZYNQ_PWMS; ++i) {
 		sharedMem_cmd->periodhi[i].period   =  freq2tick(FREQUENCY_PWM);
 		sharedMem_cmd->periodhi[i].hi = freq2tick(FREQUENCY_PWM) / 2; // i prefer it is zero at the beginning
 		//PX4_ERR("initialize pwm pointer failed.%d, %d", sharedMem_cmd->periodhi[i].period, sharedMem_cmd->periodhi[i].hi);
@@ -236,7 +234,7 @@ int pwm_initialize(const char *device)
 
 void pwm_deinitialize()
 {
-	for (int i = 0; i < NUM_PWM; ++i) {
+	for (int i = 0; i < MAX_ZYNQ_PWMS; ++i) {
 		sharedMem_cmd = nullptr;
 	}
 }
@@ -250,7 +248,7 @@ void send_outputs_pwm(const uint16_t *pwm)
 	}
 
 	//convert this to duty_cycle in ns
-	for (unsigned i = 0; i < NUM_PWM; ++i) {
+	for (unsigned i = 0; i < MAX_ZYNQ_PWMS; ++i) {
 		//n = ::asprintf(&data, "%u", pwm[i] * 1000);
 		//::write(_pwm_fd[i], data, n);
 		sharedMem_cmd->periodhi[i].hi = TICK_PER_US * pwm[i];
@@ -347,17 +345,17 @@ void task_main(int argc, char *argv[])
 			}
 
 			const uint16_t reverse_mask = 0;
-			uint16_t disarmed_pwm[4];
-			uint16_t min_pwm[4];
-			uint16_t max_pwm[4];
+			uint16_t disarmed_pwm[MAX_ZYNQ_PWMS];
+			uint16_t min_pwm[MAX_ZYNQ_PWMS];
+			uint16_t max_pwm[MAX_ZYNQ_PWMS];
 
-			for (unsigned int i = 0; i < 4; i++) {
+			for (unsigned int i = 0; i < MAX_ZYNQ_PWMS; i++) {
 				disarmed_pwm[i] = _pwm_disarmed;
 				min_pwm[i] = _pwm_min;
 				max_pwm[i] = _pwm_max;
 			}
 
-			uint16_t pwm[4];
+			uint16_t pwm[MAX_ZYNQ_PWMS];
 
 			// TODO FIXME: pre-armed seems broken
 			pwm_limit_calc(_armed.armed,
