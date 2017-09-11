@@ -72,6 +72,7 @@ set(config_module_list
 	drivers/ocpoc_sbus_rc_in
 	drivers/ocpoc_mmap_pwm_out
 	drivers/rgbled
+	drivers/ulanding
 
 	#
 	# Libraries
